@@ -1,0 +1,185 @@
+root = true
+
+# ============================================================
+# General
+# ============================================================
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# ============================================================
+# C#
+# ============================================================
+
+[*.cs]
+
+# ------------------------------------------------------------
+# Using directives
+# ------------------------------------------------------------
+
+csharp_using_directive_placement = outside_namespace
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# ------------------------------------------------------------
+# var
+# ------------------------------------------------------------
+
+# Prefer explicit types.
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# ------------------------------------------------------------
+# Braces / blocks
+# ------------------------------------------------------------
+
+csharp_prefer_braces = true:warning
+
+# ------------------------------------------------------------
+# Namespace
+# ------------------------------------------------------------
+
+# Modern C# style
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# ------------------------------------------------------------
+# Expression / syntax
+# ------------------------------------------------------------
+
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_extended_property_pattern = true:suggestion
+
+csharp_style_throw_expression = true:suggestion
+csharp_style_prefer_index_operator = true:suggestion
+csharp_style_prefer_range_operator = true:suggestion
+csharp_style_prefer_null_check_over_type_check = true:suggestion
+
+# ------------------------------------------------------------
+# Object / collection initialization
+# ------------------------------------------------------------
+
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_prefer_collection_expression = true:suggestion
+
+# ------------------------------------------------------------
+# Null / boolean
+# ------------------------------------------------------------
+
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
+dotnet_style_prefer_compound_assignment = true:suggestion
+
+# ------------------------------------------------------------
+# Fields
+# ------------------------------------------------------------
+
+dotnet_style_readonly_field = true:warning
+
+# ------------------------------------------------------------
+# Accessibility
+# ------------------------------------------------------------
+
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+
+# ------------------------------------------------------------
+# Expression-bodied members
+# ------------------------------------------------------------
+
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+
+# Keep methods / constructors explicit for readability
+csharp_style_expression_bodied_methods = false:suggestion
+csharp_style_expression_bodied_constructors = false:suggestion
+csharp_style_expression_bodied_operators = false:suggestion
+
+# ------------------------------------------------------------
+# Modern C# features
+# ------------------------------------------------------------
+
+csharp_prefer_static_local_function = true:suggestion
+csharp_prefer_static_anonymous_function = true:suggestion
+csharp_style_prefer_simple_using_statement = true:suggestion
+csharp_style_prefer_primary_constructors = false:suggestion
+
+# ============================================================
+# Formatting
+# ============================================================
+
+# Braces
+csharp_new_line_before_open_brace = all
+
+# New lines
+csharp_new_line_before_catch = true
+csharp_new_line_before_else = true
+csharp_new_line_before_finally = true
+
+# Indentation
+csharp_indent_block_contents = true
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = true
+csharp_indent_switch_labels = true
+
+# Spaces
+csharp_space_after_comma = true
+csharp_space_before_comma = false
+csharp_space_around_binary_operators = before_and_after
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+csharp_space_between_method_declaration_name_and_open_parenthesis = false
+csharp_space_between_parentheses = false
+
+# ============================================================
+# Naming
+# ============================================================
+
+# Interface -> IUserService
+dotnet_naming_rule.interface_should_be_begins_with_i.severity = warning
+dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
+dotnet_naming_rule.interface_should_be_begins_with_i.style = begins_with_i
+
+# Types -> UserService / User / UserStatus
+dotnet_naming_rule.types_should_be_pascal_case.severity = warning
+dotnet_naming_rule.types_should_be_pascal_case.symbols = types
+dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+
+# Methods / Properties / Events -> PascalCase
+dotnet_naming_rule.members_should_be_pascal_case.severity = warning
+dotnet_naming_rule.members_should_be_pascal_case.symbols = members
+dotnet_naming_rule.members_should_be_pascal_case.style = pascal_case
+
+# ------------------------------------------------------------
+# Symbols
+# ------------------------------------------------------------
+
+dotnet_naming_symbols.interface.applicable_kinds = interface
+dotnet_naming_symbols.interface.applicable_accessibilities = *
+dotnet_naming_symbols.interface.required_modifiers =
+
+dotnet_naming_symbols.types.applicable_kinds = class,struct,interface,enum
+dotnet_naming_symbols.types.applicable_accessibilities = *
+dotnet_naming_symbols.types.required_modifiers =
+
+dotnet_naming_symbols.members.applicable_kinds = method,property,event
+dotnet_naming_symbols.members.applicable_accessibilities = *
+dotnet_naming_symbols.members.required_modifiers =
+
+# ------------------------------------------------------------
+# Styles
+# ------------------------------------------------------------
+
+dotnet_naming_style.begins_with_i.required_prefix = I
+dotnet_naming_style.begins_with_i.capitalization = pascal_case
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case

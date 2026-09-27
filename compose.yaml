@@ -1,0 +1,212 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+      # =========================
+      # PostgreSQL
+      # =========================
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-myproject};
+        Username=${POSTGRES_USER:-postgres};
+        Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+
+      # =========================
+      # MongoDB
+      # =========================
+      MongoDb__ConnectionString: >-
+        mongodb://${MONGO_INITDB_ROOT_USERNAME:-root}:${MONGO_INITDB_ROOT_PASSWORD:?Set MONGO_INITDB_ROOT_PASSWORD in .env}@mongodb:27017/?authSource=admin
+
+      MongoDb__DatabaseName: ${MONGO_INITDB_DATABASE:-myproject}
+
+      # =========================
+      # Redis
+      # =========================
+      Redis__Enabled: "true"
+      Redis__ConnectionString: >-
+        redis:6379,password=${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env},abortConnect=false
+
+      # =========================
+      # RabbitMQ
+      # =========================
+      RabbitMq__Enabled: "true"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__Username: ${RABBITMQ_DEFAULT_USER:-admin}
+      RabbitMq__Password: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS in .env}
+      RabbitMq__VirtualHost: /
+
+      # =========================
+      # Brevo
+      # =========================
+      Email__Provider: Brevo
+      Brevo__ApiKey: ${BREVO_API_KEY:?Set BREVO_API_KEY in .env}
+      Brevo__SenderEmail: ${BREVO_SENDER_EMAIL:?Set BREVO_SENDER_EMAIL in .env}
+      Brevo__SenderName: ${BREVO_SENDER_NAME:-MyProject}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      mongodb:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+
+  # ============================================================
+  # PostgreSQL
+  # ============================================================
+  postgres:
+    image: postgres:17-alpine
+
+    ports:
+      - "5432:5432"
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-myproject}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+
+  # ============================================================
+  # MongoDB
+  # ============================================================
+  mongodb:
+    image: mongo:8
+
+    ports:
+      - "27017:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?Set MONGO_INITDB_ROOT_PASSWORD in .env}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-myproject}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet \
+          -u $$MONGO_INITDB_ROOT_USERNAME \
+          -p $$MONGO_INITDB_ROOT_PASSWORD \
+          --authenticationDatabase admin \
+          --eval \"quit(db.adminCommand('ping').ok ? 0 : 2)\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    volumes:
+      - mongodb-data:/data/db
+      - ./scripts/init-mongodb.js:/docker-entrypoint-initdb.d/001-indexes.js:ro
+
+    restart: unless-stopped
+
+
+  # ============================================================
+  # Redis
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+
+    ports:
+      - "6379:6379"
+
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}"
+      ]
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    volumes:
+      - redis-data:/data
+
+    restart: unless-stopped
+
+
+  # ============================================================
+  # RabbitMQ
+  # ============================================================
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+
+    ports:
+      # AMQP
+      - "5672:5672"
+
+      # Management UI
+      - "15672:15672"
+
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS in .env}
+      RABBITMQ_DEFAULT_VHOST: /
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "rabbitmq-diagnostics -q ping"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+    restart: unless-stopped
+
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  rabbitmq-data:
