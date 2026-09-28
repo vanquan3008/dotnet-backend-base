@@ -42,8 +42,6 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    
-
     private static void AddCors(IServiceCollection services, IConfiguration configuration)
     {
         var section = configuration.GetSection(CorsOptions.SectionName);

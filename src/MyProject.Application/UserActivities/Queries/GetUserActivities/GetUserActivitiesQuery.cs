@@ -4,7 +4,7 @@ using MyProject.Application.UserActivities.Models;
 
 namespace MyProject.Application.UserActivities.Queries.GetUserActivities;
 
-public sealed record GetUserActivitiesQuery: IQuery<IReadOnlyList<UserActivity>>
+public sealed record GetUserActivitiesQuery : IQuery<IReadOnlyList<UserActivity>>
 {
     public Guid UserId { get; init; }
 
