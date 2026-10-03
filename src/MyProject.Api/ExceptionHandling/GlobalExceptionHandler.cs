@@ -23,11 +23,15 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
 
         if (exception is not (DomainException or ApplicationExceptionBase))
         {
+            var sanitizedRequestPath = httpContext.Request.Path.ToString()
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty);
+
             logger.LogError(
                 exception,
                 "Unhandled exception while processing {RequestMethod} {RequestPath}",
                 httpContext.Request.Method,
-                httpContext.Request.Path);
+                sanitizedRequestPath);
         }
 
         var statusCode = error.Type.ToStatusCode();
