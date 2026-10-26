@@ -25,7 +25,15 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>, IHasDomainEvents
         return EqualityComparer<TId>.Default.Equals(Id, other.Id);
     }
 
-    public override bool Equals(object? obj) => obj is Entity<TId> other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        if (obj?.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((Entity<TId>)obj!);
+    }
 
     public override int GetHashCode()
         => IsTransient ? RuntimeHelpers.GetHashCode(this) : HashCode.Combine(GetType(), Id);
