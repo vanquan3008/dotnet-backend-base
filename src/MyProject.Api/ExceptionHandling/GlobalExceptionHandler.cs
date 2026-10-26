@@ -26,8 +26,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             logger.LogError(
                 exception,
                 "Unhandled exception while processing {RequestMethod} {RequestPath}",
-                httpContext.Request.Method,
-                httpContext.Request.Path);
+                Sanitize(httpContext.Request.Method),
+                Sanitize(httpContext.Request.Path.Value));
         }
 
         var statusCode = error.Type.ToStatusCode();
@@ -46,4 +46,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
         return true;
     }
+
+    private static string Sanitize(string? value)
+        => value?.Replace("\r", string.Empty).Replace("\n", string.Empty) ?? string.Empty;
 }

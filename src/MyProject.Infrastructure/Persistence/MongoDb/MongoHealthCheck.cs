@@ -17,9 +17,16 @@ internal sealed class MongoHealthCheck(IMongoDatabase database) : IHealthCheck
                 cancellationToken: cancellationToken);
             return HealthCheckResult.Healthy();
         }
-        catch (Exception exception)
+        catch (MongoException exception)
         {
-            return HealthCheckResult.Unhealthy("MongoDB is unavailable.", exception);
+            return Unavailable(exception);
+        }
+        catch (TimeoutException exception)
+        {
+            return Unavailable(exception);
         }
     }
+
+    private static HealthCheckResult Unavailable(Exception exception)
+        => HealthCheckResult.Unhealthy("MongoDB is unavailable.", exception);
 }

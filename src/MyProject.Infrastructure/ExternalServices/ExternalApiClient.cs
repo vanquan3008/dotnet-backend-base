@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -8,7 +9,7 @@ using MyProject.Application.Common.Interfaces;
 
 namespace MyProject.Infrastructure.ExternalServices;
 
-public sealed class ExternalApiClient(HttpClient client, ILogger<ExternalApiClient> logger)
+public sealed partial class ExternalApiClient(HttpClient client, ILogger<ExternalApiClient> logger)
     : IExternalApiClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -109,15 +110,13 @@ public sealed class ExternalApiClient(HttpClient client, ILogger<ExternalApiClie
                 $"External API request timed out after {request.TimeoutSeconds} seconds.",
                 stopwatch.ElapsedMilliseconds);
         }
-        catch (Exception exception)
+        catch (HttpRequestException exception)
         {
-            result = new ExternalApiResponse<TResult>(
-                false,
-                null,
-                default,
-                null,
-                exception.Message,
-                stopwatch.ElapsedMilliseconds);
+            result = Failure<TResult>(exception, stopwatch.ElapsedMilliseconds);
+        }
+        catch (IOException exception)
+        {
+            result = Failure<TResult>(exception, stopwatch.ElapsedMilliseconds);
         }
         finally
         {
@@ -127,6 +126,9 @@ public sealed class ExternalApiClient(HttpClient client, ILogger<ExternalApiClie
         Log(request, requestUri.GetLeftPart(UriPartial.Path), requestContent, result);
         return result;
     }
+
+    private static ExternalApiResponse<TResult> Failure<TResult>(Exception exception, long durationMilliseconds)
+        => new(false, null, default, null, exception.Message, durationMilliseconds);
 
     private static string Serialize(object body, string contentType)
     {
@@ -153,9 +155,9 @@ public sealed class ExternalApiClient(HttpClient client, ILogger<ExternalApiClie
             return default;
         }
 
-        if (typeof(TResult) == typeof(string))
+        if (typeof(TResult) == typeof(string) && content is TResult text)
         {
-            return (TResult)(object)content;
+            return text;
         }
 
         if (contentType?.Contains("xml", StringComparison.OrdinalIgnoreCase) == true)
@@ -174,26 +176,34 @@ public sealed class ExternalApiClient(HttpClient client, ILogger<ExternalApiClie
         string? requestContent,
         ExternalApiResponse<TResult> response)
     {
-        var values = new object?[]
+        var level = response.IsSuccess ? LogLevel.Information : LogLevel.Warning;
+        if (!logger.IsEnabled(level))
         {
+            return;
+        }
+
+        LogCall(
+            level,
             request.Method,
             requestUrl,
             response.StatusCode,
             response.DurationMilliseconds,
             request.LogPayload ? requestContent : null,
             request.LogPayload ? response.Content : null,
-            response.ErrorMessage
-        };
-
-        const string template = "External API {Method} {Url} returned {StatusCode} in {DurationMs} ms. "
-            + "Request: {RequestPayload}; Response: {ResponsePayload}; Error: {ErrorMessage}";
-        if (response.IsSuccess)
-        {
-            logger.LogInformation(template, values);
-        }
-        else
-        {
-            logger.LogWarning(template, values);
-        }
+            response.ErrorMessage);
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Message = "External API {Method} {Url} returned {StatusCode} in {DurationMs} ms. "
+            + "Request: {RequestPayload}; Response: {ResponsePayload}; Error: {ErrorMessage}")]
+    private partial void LogCall(
+        LogLevel level,
+        HttpMethod method,
+        string url,
+        HttpStatusCode? statusCode,
+        long durationMs,
+        string? requestPayload,
+        string? responsePayload,
+        string? errorMessage);
 }

@@ -44,7 +44,12 @@ internal sealed class LocalFileStorageService : IFileStorageService
     private string ResolvePath(string key)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        var path = Path.GetFullPath(Path.Combine(root, key));
+        if (Path.IsPathRooted(key))
+        {
+            throw new ArgumentException("File key must be a relative path.", nameof(key));
+        }
+
+        var path = Path.GetFullPath(Path.Join(root, key));
         var rootPrefix = root.EndsWith(Path.DirectorySeparatorChar)
             ? root
             : root + Path.DirectorySeparatorChar;
